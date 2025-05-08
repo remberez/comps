@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from auth.router import router as auth_router
+
 app = FastAPI(
     title="Computer Store API",
     description="API для магазина компьютерной техники",
@@ -20,6 +22,13 @@ app.add_middleware(
     allow_methods=["*"],  # Разрешаем все HTTP методы
     allow_headers=["*"],  # Разрешаем все заголовки
 )
+
+# Подключаем роутеры
+app.include_router(auth_router)
+
+@app.get("/")
+async def root():
+    return {"message": "Computer Store API"}
 
 if __name__ == "__main__":
     import uvicorn
