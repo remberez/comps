@@ -1,3 +1,0 @@
-"""
-Computer Store Backend Package
-""" 

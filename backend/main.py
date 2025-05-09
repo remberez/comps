@@ -4,6 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from auth.router import router as auth_router
 from categories.router import router as categories_router
 from products.router import router as products_router
+from orders.router import router as orders_router
+from reviews.router import router as reviews_router
+from cart.router import router as cart_router
+from suppliers.router import router as suppliers_router
 
 app = FastAPI(
     title="Computer Store API",
@@ -29,6 +33,10 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(categories_router)
 app.include_router(products_router)
+app.include_router(orders_router)
+app.include_router(reviews_router)
+app.include_router(cart_router)
+app.include_router(suppliers_router)
 
 @app.get("/")
 async def root():

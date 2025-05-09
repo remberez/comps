@@ -4,9 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from database import get_db
-from models import Product, Category, User
+from models import Product, Category, Supplier, User
 from auth.security import get_current_active_user
-from .schemas import ProductCreate, ProductUpdate, Product as ProductSchema
+from .schemas import (
+    ProductCreate,
+    ProductUpdate,
+    Product as ProductSchema
+)
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -37,7 +41,7 @@ async def get_product(
     product_id: int,
     db: AsyncSession = Depends(get_db)
 ) -> Product:
-    """Получить продукт по ID"""
+    """Получить информацию о конкретном продукте"""
     stmt = select(Product).where(Product.id == product_id)
     result = await db.execute(stmt)
     product = result.scalar_one_or_none()
@@ -61,11 +65,20 @@ async def create_product(
     result = await db.execute(stmt)
     if not result.scalar_one_or_none():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found"
         )
     
-    # Проверяем уникальность имени продукта
+    # Проверяем существование поставщика
+    stmt = select(Supplier).where(Supplier.id == product_data.supplier_id)
+    result = await db.execute(stmt)
+    if not result.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Supplier not found"
+        )
+    
+    # Проверяем уникальность имени
     stmt = select(Product).where(Product.name == product_data.name)
     result = await db.execute(stmt)
     if result.scalar_one_or_none():
@@ -87,7 +100,7 @@ async def update_product(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_admin_user)
 ) -> Product:
-    """Обновить продукт (только для админов)"""
+    """Обновить информацию о продукте (только для админов)"""
     stmt = select(Product).where(Product.id == product_id)
     result = await db.execute(stmt)
     product = result.scalar_one_or_none()
@@ -98,17 +111,27 @@ async def update_product(
             detail="Product not found"
         )
     
-    # Проверяем существование категории, если она указана
+    # Проверяем существование категории, если она обновляется
     if product_data.category_id is not None:
         stmt = select(Category).where(Category.id == product_data.category_id)
         result = await db.execute(stmt)
         if not result.scalar_one_or_none():
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found"
             )
     
-    # Проверяем уникальность имени, если оно изменяется
+    # Проверяем существование поставщика, если он обновляется
+    if product_data.supplier_id is not None:
+        stmt = select(Supplier).where(Supplier.id == product_data.supplier_id)
+        result = await db.execute(stmt)
+        if not result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Supplier not found"
+            )
+    
+    # Проверяем уникальность имени, если оно обновляется
     if product_data.name is not None and product_data.name != product.name:
         stmt = select(Product).where(Product.name == product_data.name)
         result = await db.execute(stmt)
