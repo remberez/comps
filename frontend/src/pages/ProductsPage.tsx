@@ -1,20 +1,17 @@
-import React from "react";
-import api from "../api/axios";
+import React, { useEffect } from "react";
 import cartStore from "../stores/cartStore";
 import { observer } from "mobx-react-lite";
+import productStore from "../stores/productStore";
+import categoryStore from "../stores/categoryStore";
 
-const ProductsPage: React.FC = observer(() => {
-  const [products, setProducts] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
+const ProductsPage = observer(() => {
+  const [_, setError] = React.useState<string | null>(null);
   const [addingId, setAddingId] = React.useState<number | null>(null);
   const [successId, setSuccessId] = React.useState<number | null>(null);
 
-  React.useEffect(() => {
-    api.get("/products")
-      .then(res => setProducts(res.data))
-      .catch(err => setError("Ошибка загрузки товаров"))
-      .finally(() => setLoading(false));
+  useEffect(() => {
+    productStore.fetchProducts();
+    categoryStore.fetchCategories();
   }, []);
 
   const handleAddToCart = async (productId: number) => {
@@ -32,32 +29,49 @@ const ProductsPage: React.FC = observer(() => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-6">Товары</h1>
-      {loading && <div>Загрузка...</div>}
-      {error && <div className="text-red-600">{error}</div>}
-      <div className="grid md:grid-cols-3 gap-8">
-        {products.map((p) => (
-          <div
-            key={p.id}
-            className="rounded-2xl bg-white shadow-md hover:shadow-xl transition-shadow p-7 flex flex-col items-center text-center border border-gray-100 hover:-translate-y-1 duration-200"
-          >
-            <div className="font-semibold text-xl mb-1 text-gray-900">{p.name}</div>
-            <div className="text-gray-500 text-sm mb-4">{p.description}</div>
-            <div className="font-extrabold text-2xl text-violet-700 mb-5">{p.price} <span className="text-base font-medium">₽</span></div>
-            <button
-              className="w-full py-2 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-700 transition disabled:opacity-60"
-              onClick={() => handleAddToCart(p.id)}
-              disabled={addingId === p.id}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">Товары</h1>
+        
+        {productStore.loading && (
+          <div className="text-center text-gray-600">Загрузка...</div>
+        )}
+        
+        {productStore.error && (
+          <div className="text-red-600 mb-4">{productStore.error}</div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {productStore.products.map((product) => (
+            <div
+              key={product.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
             >
-              {addingId === p.id
-                ? "Добавление..."
-                : successId === p.id
-                ? "Добавлено!"
-                : "В корзину"}
-            </button>
-          </div>
-        ))}
+              <div className="p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  {product.name}
+                </h2>
+                <p className="text-gray-600 mb-4">{product.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold text-violet-600">
+                    {product.price} ₽
+                  </span>
+                  <button
+                    className="px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition"
+                    onClick={() => handleAddToCart(product.id)}
+                    disabled={addingId === product.id}
+                  >
+                    {addingId === product.id
+                      ? "Добавление..."
+                      : successId === product.id
+                      ? "Добавлено!"
+                      : "В корзину"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

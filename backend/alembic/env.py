@@ -24,7 +24,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
-config.set_main_option("sqlalchemy.url", "postgresql+asyncpg://admin:admin123@localhost:5433/computer_store")
+config.set_main_option("sqlalchemy.url", "postgresql+asyncpg://admin:admin123@db:5432/computer_store")
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
