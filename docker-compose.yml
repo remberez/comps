@@ -5,8 +5,6 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/pinf21
     depends_on:
       db:
         condition: service_healthy
@@ -22,21 +20,14 @@ services:
 
   db:
     image: postgres:15
-    container_name: computer_store_db
     environment:
-      - POSTGRES_DB=pinf21
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=computer_store
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin123
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
 
 volumes:
   postgres_data: 
