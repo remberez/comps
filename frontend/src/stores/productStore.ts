@@ -17,9 +17,14 @@ class ProductStore {
   products: IProduct[] = [];
   loading = false;
   error: string | null = null;
+  editingProduct: IProduct | null = null;
 
   constructor() {
     makeAutoObservable(this);
+  }
+
+  setEditingProduct(product: IProduct | null) {
+    this.editingProduct = product;
   }
 
   async fetchProducts() {
@@ -50,6 +55,21 @@ class ProductStore {
     } catch (e: any) {
       runInAction(() => {
         this.error = e.response?.data?.detail || "Ошибка создания товара";
+      });
+      return false;
+    }
+  }
+
+  async updateProduct(id: number, product: Partial<IProduct>) {
+    this.error = null;
+    try {
+      await api.put(`/products/${id}`, product);
+      await this.fetchProducts();
+      this.setEditingProduct(null);
+      return true;
+    } catch (e: any) {
+      runInAction(() => {
+        this.error = e.response?.data?.detail || "Ошибка обновления товара";
       });
       return false;
     }

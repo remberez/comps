@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +13,7 @@ from .security import (
     get_password_hash,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
-    get_current_active_user
+    get_current_active_user,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -87,4 +87,13 @@ async def verify_token(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ) -> dict:
     """Проверка валидности токена"""
-    return {"valid": True, "user": current_user} 
+    return {"valid": True, "user": current_user}
+
+@router.get("/users", response_model=List[UserSchema])
+async def get_users(
+    db: AsyncSession = Depends(get_db),
+) -> List[User]:
+    """Получить список всех пользователей (только для админов)"""
+    stmt = select(User)
+    result = await db.execute(stmt)
+    return result.scalars().all() 

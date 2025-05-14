@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 import CategoryAdminSection from "../sections/CategoryAdminSection";
 import ProductAdminSection from "../sections/ProductAdminSection";
+import { UsersList } from "../components/admin/UsersList";
 
 const sections = [
   { key: "categories", label: "Категории товаров" },
@@ -33,9 +34,7 @@ const AdminPage: React.FC = observer(() => {
       <main className="flex-1 p-8">
         {active === "categories" && <CategoryAdminSection />}
         {active === "products" && <ProductAdminSection />}
-        {active === "users" && (
-          <div className="text-gray-400 text-lg">Управление пользователями появится позже</div>
-        )}
+        {active === "users" && <UsersList />}
       </main>
     </div>
   );

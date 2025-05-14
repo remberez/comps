@@ -22,6 +22,21 @@ const ProductAdminSection: React.FC = observer(() => {
     categoryStore.fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (productStore.editingProduct) {
+      setForm({
+        name: productStore.editingProduct.name,
+        description: productStore.editingProduct.description,
+        price: productStore.editingProduct.price,
+        stock: productStore.editingProduct.stock,
+        category_id: productStore.editingProduct.category_id,
+        supplier_id: productStore.editingProduct.supplier_id,
+        supply_price: productStore.editingProduct.supply_price,
+        last_supply_date: new Date(productStore.editingProduct.last_supply_date).toISOString().slice(0, 10),
+      });
+    }
+  }, [productStore.editingProduct]);
+
   if (!userStore.user?.is_admin) {
     return <div className="text-red-600 text-center text-lg">Доступ только для администраторов</div>;
   }
@@ -30,10 +45,10 @@ const ProductAdminSection: React.FC = observer(() => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccess(false);
-    const ok = await productStore.createProduct({
+    const productData = {
       ...form,
       price: Number(form.price),
       stock: Number(form.stock),
@@ -41,7 +56,15 @@ const ProductAdminSection: React.FC = observer(() => {
       supplier_id: Number(form.supplier_id),
       supply_price: Number(form.supply_price),
       last_supply_date: new Date(form.last_supply_date).toISOString(),
-    });
+    };
+
+    let ok;
+    if (productStore.editingProduct) {
+      ok = await productStore.updateProduct(productStore.editingProduct.id, productData);
+    } else {
+      ok = await productStore.createProduct(productData);
+    }
+
     if (ok) {
       setForm({
         name: "",
@@ -58,10 +81,28 @@ const ProductAdminSection: React.FC = observer(() => {
     }
   };
 
+  const handleEdit = (product: typeof productStore.products[0]) => {
+    productStore.setEditingProduct(product);
+  };
+
+  const handleCancel = () => {
+    productStore.setEditingProduct(null);
+    setForm({
+      name: "",
+      description: "",
+      price: 1,
+      stock: 1,
+      category_id: 0,
+      supplier_id: 1,
+      supply_price: 1,
+      last_supply_date: new Date().toISOString().slice(0, 10),
+    });
+  };
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Товары</h2>
-      <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-4 mb-4 flex-wrap">
+      <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 mb-4 flex-wrap">
         <div className="flex flex-col flex-1">
           <label className="mb-1 text-gray-700">Название товара</label>
           <input
@@ -164,19 +205,31 @@ const ProductAdminSection: React.FC = observer(() => {
             required
           />
         </div>
-        <div className="flex flex-col justify-end">
+        <div className="flex flex-col justify-end gap-2">
           <button
             type="submit"
             className="px-6 py-2 bg-violet-600 text-white rounded-lg font-semibold hover:bg-violet-700 transition"
             disabled={productStore.loading}
           >
-            {productStore.loading ? "Создание..." : "Создать"}
+            {productStore.loading ? "Сохранение..." : productStore.editingProduct ? "Сохранить" : "Создать"}
           </button>
+          {productStore.editingProduct && (
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-6 py-2 bg-gray-100 text-gray-600 rounded-lg font-semibold hover:bg-gray-200 transition"
+            >
+              Отмена
+            </button>
+          )}
         </div>
       </form>
       {productStore.error && <div className="text-red-600 mb-2">{productStore.error}</div>}
-      {success && <div className="text-green-600 mb-2">Товар создан!</div>}
-      <div className="space-y-3">
+      {success && <div className="text-green-600 mb-2">
+        {productStore.editingProduct ? "Товар обновлен!" : "Товар создан!"}
+      </div>}
+      
+      <div className="space-y-2">
         {productStore.products.map(prod => (
           <div key={prod.id} className="flex items-center justify-between bg-white rounded shadow px-4 py-3">
             <div>
@@ -184,10 +237,20 @@ const ProductAdminSection: React.FC = observer(() => {
               <div className="text-gray-500 text-sm">{prod.description}</div>
               <div className="text-sm text-gray-700">Цена: {prod.price} ₽, Склад: {prod.stock}</div>
             </div>
-            <button
-              className="px-4 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
-              onClick={() => productStore.deleteProduct(prod.id)}
-            >Удалить</button>
+            <div className="flex gap-2">
+              <button
+                className="px-4 py-1 bg-violet-100 text-violet-600 rounded hover:bg-violet-200 transition"
+                onClick={() => handleEdit(prod)}
+              >
+                Изменить
+              </button>
+              <button
+                className="px-4 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 transition"
+                onClick={() => productStore.deleteProduct(prod.id)}
+              >
+                Удалить
+              </button>
+            </div>
           </div>
         ))}
       </div>
