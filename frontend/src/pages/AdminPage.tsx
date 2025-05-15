@@ -3,11 +3,13 @@ import { observer } from "mobx-react-lite";
 import CategoryAdminSection from "../sections/CategoryAdminSection";
 import ProductAdminSection from "../sections/ProductAdminSection";
 import { UsersList } from "../components/admin/UsersList";
+import OrderAdminSection from "../sections/OrdersAdminSection";
 
 const sections = [
   { key: "categories", label: "Категории товаров" },
   { key: "products", label: "Товары" },
   { key: "users", label: "Пользователи" },
+  { key: "orders", label: "Заказы" },
   // В будущем можно добавить другие сущности
 ];
 
@@ -35,6 +37,7 @@ const AdminPage: React.FC = observer(() => {
         {active === "categories" && <CategoryAdminSection />}
         {active === "products" && <ProductAdminSection />}
         {active === "users" && <UsersList />}
+        {active === "orders" && <OrderAdminSection/>}
       </main>
     </div>
   );

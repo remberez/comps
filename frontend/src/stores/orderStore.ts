@@ -63,6 +63,25 @@ class OrderStore {
       });
     }
   }
+
+  async updateOrder(id: number, data: Partial<IOrder>) {
+    this.loading = true;
+    this.error = null;
+    try {
+      await api.put(`/orders/${id}`, data);
+      await this.fetchOrders();
+      return true;
+    } catch (e: any) {
+      runInAction(() => {
+        this.error = e.response?.data?.detail || "Ошибка обновления заказа";
+      });
+      return false;
+    } finally {
+      runInAction(() => {
+        this.loading = false;
+      });
+    }
+  }
 }
 
 const orderStore = new OrderStore();
