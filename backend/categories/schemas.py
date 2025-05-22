@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class CategoryBase(BaseModel):
@@ -5,13 +6,16 @@ class CategoryBase(BaseModel):
     description: str
 
 class CategoryCreate(CategoryBase):
-    pass
+    parent_id: Optional[int] = None
 
 class CategoryUpdate(CategoryBase):
-    pass
+    parent_id: Optional[int] = None
 
 class Category(CategoryBase):
     id: int
+    parent_id: Optional[int]
+    lft: int
+    rgt: int
 
     class Config:
-        from_attributes = True 
+        from_attributes = True

@@ -60,7 +60,12 @@ class Category(Base):
     description: Mapped[str] = Column(String)
     created_at: Mapped[datetime] = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at: Mapped[datetime] = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
+    parent_id: Mapped[Optional[int]] = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    lft: Mapped[int] = Column(Integer, nullable=False, index=True)
+    rgt: Mapped[int] = Column(Integer, nullable=False, index=True)
+
+    parent: Mapped[Optional["Category"]] = relationship("Category", remote_side=[id], backref="children")
     products: Mapped[List["Product"]] = relationship("Product", back_populates="category")
 
 class Order(Base):
